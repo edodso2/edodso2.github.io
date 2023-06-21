@@ -1,31 +1,32 @@
-import os
-import openai
-from git import Repo
-from pathlib import Path
+import utils
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# Enter blog post title
+# Example: Python and AI
+title = input("Blog post title: ")
 
-PATH_TO_BLOG = Path(os.getcwd())
-PATH_TO_BLOG_REPO = PATH_TO_BLOG/".git"
-PATH_TO_CONTENT = PATH_TO_BLOG/"content"
+# Enter blog post tags
+# Example: tech, python, coding, AI, machine learning
+tags = input("Blog post tags: ")
 
-PATH_TO_CONTENT.mkdir(exist_ok=True, parents=True)
+# Enter blog post summary
+# Example: I talk about what the future of AI could hold for Python
+summary = input("Blog post summary: ")
 
-def update_blog(commit_message='Updates blog'):
-    # Reports repository location to GitPython
-    repo = Repo(PATH_TO_BLOG_REPO)
+# Generate blog content with OpenAI
+blog_content = utils.get_blog_from_openai(
+    title,
+    tags,
+    summary
+)
 
-    # Git Add
-    repo.git.add(all=True)
+# Generate cover image with Dalle2
+_, cover_image_save_path = utils.get_cover_image(title, 'cover_image.png')
 
-    # Git Commit
-    repo.index.commit(commit_message)
+# Create the blog HTML page
+path_to_new_content = utils.create_new_blog(title, blog_content, cover_image_save_path)
 
-    # Git Push
-    origin = repo.remote(name='origin')
-    origin.push()
+# Update the index.html page with a link to the new blog
+utils.write_to_index(path_to_new_content)
 
-with open(PATH_TO_BLOG/"index.html", 'w') as f:
-    f.write('test 2')
-
-update_blog()
+# Push to github
+utils.update_blog('Add AI generated blog post')
